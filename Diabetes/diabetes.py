@@ -40,7 +40,7 @@ def data_distribution(data):
 
 # KORELASYON
 def correlation_matrix(data):
-    corr_matrix = data.corr() # her kategorinin heatmap için birbiriyle olan ilişkisini çıkarmaya yarıyor.
+    corr_matrix = data.corr()
     plt.figure(figsize=(10, 8))
     sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', linewidths=0.5, fmt='.2f')
     plt.title('Diabetes Heatmap', fontsize=16)
@@ -52,16 +52,14 @@ def feature_vs_outcome(data):
     df = df.drop("Outcome", axis=1)
     cols = df.columns
 
-    n_cols = 3
-    n_rows = 3
-
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(15, 15))
+    fig, axes = plt.subplots(nrows=3, ncols=3, figsize=(15, 15))
     axes = axes.flatten()
 
     for i, col in enumerate(cols): # loop'a birden fazla variable sokarken enumerate güvenli iteration sağlar.
-        sns.scatterplot(x=df[col], y=data["Outcome"], ax=axes[i])
+        sns.boxplot(y=df[col], x=data["Outcome"], ax=axes[i])
         axes[i].set_title(f"{col} vs Outcome")
-    plt.show() # FİGÜRE BAKILDIĞINDA BMI VE GLUCOSE DIŞINDAKİ DEĞERLERDE (Kİ BU İKİSİ DE ÇOK YÜKSEK KORELASYONA SAHİP DEĞİL),
+    plt.tight_layout()
+    plt.show() # FİGÜRE BAKILDIĞINDA BMI, YAŞ, HAMİLELİK VE GLUCOSE DIŞINDAKİ DEĞERLERDE
     # DOĞRUDAN BİR BAĞLANTI VEYA İLİŞKİ BULUNMUYOR. YANİ DİYABET SONUCU VERİLEN KATEGORİLERE DOĞRUDAN BAĞLI DEĞİL.
 
 # MODEL EVALUATION
@@ -81,7 +79,7 @@ def evaluate_model(y_test, y_pred):
     # recall = tüm pozitif tahminlerin ne kadarının pozitif olarak tahmin edildiğini gösterir
     # F1 = precision ve recall değerlerinin dengeli bir ortalama göstergesidir
 
-def hyperparameter_tuning(model, param_grid, x_train, y_train, x_test, y_test, search_type="grid"):
+def hyperparameter_tuning(model, param_grid, x_train, y_train, x_test, y_test, search_type):
     if search_type == "grid":
         # Hyperparameter tuning (GRID SEARCH CV): process of determining the combination of hyperparameters to maximize the model's performance
         search = GridSearchCV(estimator=model, param_grid=param_grid, scoring='accuracy')
@@ -126,11 +124,13 @@ models = {
 
 for model_name, (model, param_grid) in models.items():
     print(f"\nResults for {model_name}...")
-    best_params, (accuracy, precision, recall, f1) = hyperparameter_tuning(model, param_grid, x_train, y_train, x_test, y_test)
-    print(f"Best parameters: {best_params}")
-    print(f"Accuracy: {accuracy:.5f}")
-    print(f"Precision: {precision:.5f}")
-    print(f"Recall: {recall:.5f}")
-    print(f"F1 Score: {f1:.5f}")
+    for search_type in ["grid", "random"]:
+        print(f"\n{search_type.capitalize()} Search:")
+        best_params, (accuracy, precision, recall, f1) = hyperparameter_tuning(model, param_grid, x_train, y_train, x_test, y_test, search_type)
+        print(f"Best parameters: {best_params}")
+        print(f"Accuracy: {accuracy:.5f}")
+        print(f"Precision: {precision:.5f}")
+        print(f"Recall: {recall:.5f}")
+        print(f"F1 Score: {f1:.5f}")
 
 # SearchCV modelleri, classification modellerinin optimal sonucu vermesini sağlar.
